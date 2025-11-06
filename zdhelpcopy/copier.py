@@ -292,8 +292,8 @@ class HelpCenterCopier:
                         if dest_locale not in existing_locales:
                             translation_data = {
                                 'locale': dest_locale,
-                                'title': translation['name'],
-                                'description': translation.get('description', '')
+                                'title': translation['title'],
+                                'body': translation.get('body', '')
                             }
                             try:
                                 self.dest.create_category_translation(dest_cat_id, translation_data)
@@ -348,8 +348,8 @@ class HelpCenterCopier:
                         if dest_locale not in existing_locales:
                             translation_data = {
                                 'locale': dest_locale,
-                                'title': translation['name'],
-                                'description': translation.get('description', '')
+                                'title': translation['title'],
+                                'body': translation.get('body', '')
                             }
                             try:
                                 self.dest.create_section_translation(dest_sec_id, translation_data)
