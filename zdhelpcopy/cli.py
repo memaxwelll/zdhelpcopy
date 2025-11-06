@@ -1,4 +1,11 @@
-"""Interactive CLI for Zendesk Help Center Copy Tool"""
+"""Interactive CLI for Zendesk Help Center Copy Tool
+
+License: CC BY-NC 4.0 (Non-Commercial Use Only)
+Copyright (c) 2025 Max Schifferle
+
+This tool is provided "as is" without warranty. Use at your own risk.
+See LICENSE file for full terms and conditions.
+"""
 
 import click
 import os
@@ -101,7 +108,9 @@ def main(source_subdomain, source_email, source_token,
     """
     console.print(Panel.fit(
         "[bold magenta]Zendesk Help Center Copy Tool[/bold magenta]\n"
-        "Copy Help Center content between Zendesk instances",
+        "Copy Help Center content between Zendesk instances\n\n"
+        "[yellow]⚠️  Non-Commercial Use Only | Use at Your Own Risk[/yellow]\n"
+        "[dim]License: CC BY-NC 4.0 | See LICENSE file for details[/dim]",
         border_style="magenta"
     ))
     

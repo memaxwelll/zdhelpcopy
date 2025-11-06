@@ -1,0 +1,71 @@
+Creative Commons Attribution-NonCommercial 4.0 International License
+
+Copyright (c) 2025 Max Schifferle
+
+This work is licensed under the Creative Commons Attribution-NonCommercial 4.0 
+International License.
+
+You are free to:
+  - Share: copy and redistribute the material in any medium or format
+  - Adapt: remix, transform, and build upon the material
+
+Under the following terms:
+  - Attribution: You must give appropriate credit, provide a link to the 
+    license, and indicate if changes were made.
+  - NonCommercial: You may not use the material for commercial purposes.
+  - No additional restrictions: You may not apply legal terms or technological 
+    measures that legally restrict others from doing anything the license permits.
+
+To view a copy of this license, visit:
+https://creativecommons.org/licenses/by-nc/4.0/
+
+================================================================================
+
+HAFTUNGSAUSSCHLUSS / DISCLAIMER
+
+DEUTSCH:
+Dieses Tool wird "wie besehen" zur Verfügung gestellt, ohne jegliche ausdrückliche 
+oder stillschweigende Gewährleistung. In keinem Fall haften die Autoren für 
+Schäden oder andere Haftungsansprüche, sei es aus Vertrag, unerlaubter Handlung 
+oder anderweitig, die sich aus der Nutzung dieser Software oder in Verbindung 
+mit dieser Software ergeben.
+
+Die Verwendung dieses Tools erfolgt auf eigene Gefahr. Der Autor übernimmt 
+keine Haftung für:
+- Datenverlust oder -beschädigung
+- Unterbrechungen des Geschäftsbetriebs
+- Fehler oder Ausfälle bei der Datenübertragung
+- Schäden an Zendesk-Instanzen
+- Verlust von Produktivität oder Geschäftsmöglichkeiten
+
+Benutzer sind selbst dafür verantwortlich:
+- Backups ihrer Daten zu erstellen
+- Die Funktionalität in einer Testumgebung zu überprüfen
+- Sicherzustellen, dass sie über die erforderlichen Berechtigungen verfügen
+- Die Einhaltung der Zendesk-Nutzungsbedingungen
+
+ENGLISH:
+This tool is provided "as is", without warranty of any kind, express or implied. 
+In no event shall the authors be liable for any claim, damages or other liability, 
+whether in an action of contract, tort or otherwise, arising from, out of or in 
+connection with the software or the use or other dealings in the software.
+
+Use of this tool is at your own risk. The author assumes no liability for:
+- Data loss or corruption
+- Business interruptions
+- Errors or failures in data transmission
+- Damage to Zendesk instances
+- Loss of productivity or business opportunities
+
+Users are responsible for:
+- Creating backups of their data
+- Testing functionality in a test environment
+- Ensuring they have the necessary permissions
+- Compliance with Zendesk terms of service
+
+================================================================================
+
+NOTICE:
+This software uses the Zendesk API. Users must comply with Zendesk's API 
+Terms of Service and Usage Limits:
+https://www.zendesk.com/company/agreements-and-terms/api-terms-of-service/

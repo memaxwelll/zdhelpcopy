@@ -1,4 +1,11 @@
-"""Cleanup utility to delete all Help Center categories"""
+"""Cleanup utility to delete all Help Center categories
+
+License: CC BY-NC 4.0 (Non-Commercial Use Only)
+Copyright (c) 2025 Max Schifferle
+
+This tool is provided "as is" without warranty. Use at your own risk.
+See LICENSE file for full terms and conditions.
+"""
 
 import click
 import os
@@ -27,7 +34,9 @@ def main(subdomain, email, token, yes):
     """
     console.print(Panel.fit(
         "[bold red]⚠️  Zendesk Help Center Cleanup Tool  ⚠️[/bold red]\n"
-        "[yellow]Delete ALL categories, sections, and articles[/yellow]",
+        "[yellow]Delete ALL categories, sections, and articles[/yellow]\n\n"
+        "[dim]Non-Commercial Use Only | Use at Your Own Risk[/dim]\n"
+        "[dim]License: CC BY-NC 4.0 | See LICENSE file[/dim]",
         border_style="red"
     ))
     

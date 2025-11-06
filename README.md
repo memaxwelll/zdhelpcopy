@@ -1,231 +1,417 @@
 # Zendesk Help Center Copy Tool
 
-An interactive CLI tool to copy Zendesk Help Center content (categories, sections, and articles) from one Zendesk instance to another.
+<div align="center">
+
+🔄 **Copy Help Center content between Zendesk instances with ease**
+
+[![Python 3.7+](https://img.shields.io/badge/python-3.7+-blue.svg)](https://www.python.org/downloads/)
+[![License: CC BY-NC 4.0](https://img.shields.io/badge/License-CC%20BY--NC%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc/4.0/)
+[![Non-Commercial](https://img.shields.io/badge/usage-non--commercial-red.svg)](LICENSE)
+
+[Features](#features) • [Quick Start](#quick-start) • [Usage](#usage) • [Documentation](#documentation)
+
+</div>
+
+---
+
+## Overview
+
+An interactive Python CLI tool that copies Help Center content (categories, sections, and articles) from one Zendesk instance to another. Perfect for migrating content, setting up test environments, or duplicating Help Centers.
+
+> ⚠️ **IMPORTANT**: This tool is licensed for **NON-COMMERCIAL USE ONLY**. Commercial use is strictly prohibited. See [License](#license) section for details.
+> 
+> ⚠️ **DISCLAIMER**: Use at your own risk. Always backup your data and test in a non-production environment first. See [Disclaimer](#haftungsausschluss--disclaimer) section.
 
 ## Features
 
-- 🔄 **Complete Copy**: Copies categories, sections, and articles
-- 🎯 **Interactive**: Guided prompts for easy configuration
-- 📊 **Progress Tracking**: Real-time progress bars and status updates
-- 🔐 **Flexible Authentication**: Support for CLI args, environment variables, or interactive input
-- ✨ **Rich Output**: Beautiful terminal output with colors and formatting
-- 🛡️ **Error Handling**: Graceful error handling with detailed feedback
+- ✅ **Complete Content Copy** - Categories, sections, and articles
+- 🎯 **Smart ID Mapping** - Automatically maintains relationships between content
+- 📊 **Progress Tracking** - Real-time progress bars and status updates
+- 🔐 **Flexible Authentication** - Environment variables, CLI args, or interactive prompts
+- 🎨 **Rich Terminal UI** - Beautiful, colorful output with progress indicators
+- 🧹 **Cleanup Utility** - Easily delete all Help Center content
+- ⚡ **Pagination Support** - Handles large Help Centers efficiently
+- 🛡️ **Error Handling** - Detailed error messages and logging
 
-## Installation
+## Quick Start
 
-### Prerequisites
+### 1. Install
 
-- Python 3.7 or higher
-- Zendesk account with API access
-- API tokens for both source and destination Zendesk instances
+```bash
+# Clone the repository
+git clone https://github.com/memaxwelll/zdhelpcopy.git
+cd zdhelpcopy
 
-### Setup
+# Create virtual environment
+python -m venv .venv
 
-1. Clone or download this repository
-2. Create a virtual environment (recommended):
-   ```powershell
-   python -m venv .venv
-   .venv\Scripts\activate
-   ```
+# Activate virtual environment
+# On Windows PowerShell:
+.venv\Scripts\Activate.ps1
+# On Windows CMD:
+.venv\Scripts\activate.bat
+# On macOS/Linux:
+source .venv/bin/activate
 
-3. Install dependencies:
-   ```powershell
-   pip install -r requirements.txt
-   ```
+# Install dependencies
+pip install -r requirements.txt
+```
 
-4. (Optional) Install in editable mode:
-   ```powershell
-   pip install -e .
-   ```
+### 2. Configure
 
-## Configuration
+Create a `.env` file with your Zendesk credentials:
 
-### Option 1: Environment Variables (Recommended)
+```env
+# Source Zendesk instance (where to copy FROM)
+SOURCE_ZENDESK_SUBDOMAIN=your-source-subdomain
+SOURCE_ZENDESK_EMAIL=your-email@example.com
+SOURCE_ZENDESK_API_TOKEN=your-source-api-token
 
-1. Copy `.env.example` to `.env`:
-   ```powershell
-   Copy-Item .env.example .env
-   ```
+# Destination Zendesk instance (where to copy TO)
+DEST_ZENDESK_SUBDOMAIN=your-dest-subdomain
+DEST_ZENDESK_EMAIL=your-email@example.com
+DEST_ZENDESK_API_TOKEN=your-dest-api-token
+```
 
-2. Edit `.env` and fill in your credentials:
-   ```
-   SOURCE_ZENDESK_SUBDOMAIN=your-source-subdomain
-   SOURCE_ZENDESK_EMAIL=your-email@example.com
-   SOURCE_ZENDESK_API_TOKEN=your-source-api-token
+> 💡 **Tip:** Copy `.env.example` to `.env` and fill in your credentials
 
-   DEST_ZENDESK_SUBDOMAIN=your-destination-subdomain
-   DEST_ZENDESK_EMAIL=your-email@example.com
-   DEST_ZENDESK_API_TOKEN=your-destination-api-token
-   ```
+### 3. Run
 
-### Option 2: Command-Line Arguments
-
-Pass credentials directly when running the tool (see Usage section).
-
-### Option 3: Interactive Prompts
-
-Simply run the tool without credentials, and it will prompt you for the necessary information.
-
-## Getting Zendesk API Tokens
-
-1. Log in to your Zendesk instance
-2. Navigate to **Admin** → **Apps and integrations** → **APIs** → **Zendesk API**
-3. Click **Settings** tab
-4. Enable **Token Access**
-5. Click **Add API token**
-6. Copy the generated token (you won't be able to see it again!)
-
-## Usage
-
-### Basic Usage (Interactive)
-
-```powershell
+```bash
 python -m zdhelpcopy.cli
 ```
 
-The tool will guide you through the process with interactive prompts.
+That's it! The tool will copy all your Help Center content.
 
-### With Environment Variables
+## Usage
 
-If you have a `.env` file configured:
+### Basic Copy
 
-```powershell
+Copy all Help Center content with interactive prompts:
+
+```bash
+python -m zdhelpcopy.cli
+```
+
+### Auto-confirm Mode
+
+Skip all confirmation prompts (useful for automation):
+
+```bash
 python -m zdhelpcopy.cli --yes
 ```
 
-The `--yes` flag skips confirmation prompts.
+### Command-Line Arguments
 
-### With Command-Line Arguments
+Provide credentials directly (overrides `.env` file):
 
-```powershell
-python -m zdhelpcopy.cli `
-  --source-subdomain "source-company" `
-  --source-email "user@example.com" `
-  --source-token "your-source-token" `
-  --dest-subdomain "dest-company" `
-  --dest-email "user@example.com" `
-  --dest-token "your-dest-token" `
-  --yes
+```bash
+python -m zdhelpcopy.cli \
+  --source-subdomain "source" \
+  --source-email "email@example.com" \
+  --source-token "your-token" \
+  --dest-subdomain "dest" \
+  --dest-email "email@example.com" \
+  --dest-token "your-token"
 ```
 
-### If Installed via pip
+### Cleanup Utility
 
-After running `pip install -e .`, you can use the CLI command directly:
+Delete all Help Center content from an instance:
 
-```powershell
-zdhelpcopy
+```bash
+# Interactive mode (asks for confirmation)
+python -m zdhelpcopy.cleanup
+
+# Auto-confirm mode (dangerous!)
+python -m zdhelpcopy.cleanup --yes
 ```
 
-## What Gets Copied
+> ⚠️ **Warning:** The cleanup utility permanently deletes ALL categories, sections, and articles. This action cannot be undone!
 
-The tool copies the following Help Center content:
+## Documentation
 
-### Categories
-- Name
-- Description
-- Locale
-- Position
+### Getting API Tokens
 
-### Sections
-- Name
-- Description
-- Locale
-- Category association
-- Position
+1. Log in to your Zendesk instance (e.g., `https://yoursubdomain.zendesk.com`)
+2. Navigate to **Admin** (⚙️) → **Apps and integrations** → **APIs** → **Zendesk API**
+3. Under **Settings**, click **Add API token**
+4. Enter a description (e.g., "Help Center Copy Tool")
+5. Click **Save**
+6. **Copy the token immediately** (you won't be able to see it again!)
+7. Use the token in your `.env` file or command-line arguments
 
-### Articles
-- Title
-- Body (HTML content)
-- Locale
-- Section association
-- Position
-- Draft status
-- Promoted status
+### Authentication Methods
 
-## Important Notes
+The tool supports three authentication methods (in order of precedence):
 
-⚠️ **Warning**: This tool creates NEW content in the destination. It does not:
-- Delete existing content
-- Update existing content
-- Check for duplicates
+1. **Command-line arguments** - Highest priority
+2. **Environment variables** (`.env` file) - Medium priority
+3. **Interactive prompts** - Lowest priority (fallback)
 
-🔒 **Permissions**: Your API tokens must have permission to:
-- Read from source Help Center
-- Write to destination Help Center
+### What Gets Copied
 
-🌍 **Locales**: The tool copies content for the default locale only. Multi-locale content requires additional handling.
+| Content Type | Copied Attributes |
+|-------------|-------------------|
+| **Categories** | Name, Description, Locale, Position |
+| **Sections** | Name, Description, Locale, Position, Category relationship |
+| **Articles** | Title, Body, Locale, Permission group, User segment |
 
-📝 **Attachments**: Article attachments and images are not currently copied.
+### ID Mapping
 
-## Troubleshooting
+The tool maintains relationships between content:
 
-### Connection Errors
+1. **Categories** are copied first, creating a mapping of source IDs → destination IDs
+2. **Sections** use the category mapping to maintain correct parent relationships
+3. **Articles** use the section mapping to ensure they're placed in the correct sections
 
-If you get connection errors:
-1. Verify your subdomain is correct (without `.zendesk.com`)
-2. Check that your email and API token are correct
-3. Ensure your API token has the necessary permissions
+### Permission Groups
 
-### Import Errors
+Articles require a `permission_group_id` in Zendesk. The tool:
+- Fetches available permission groups from the destination instance
+- Uses the first available group (typically the default public group)
+- Sets `user_segment_id` to `null` to make articles visible to all users
 
-If you see "Import could not be resolved" errors in VS Code:
-1. Make sure the virtual environment is activated
-2. Select the correct Python interpreter in VS Code (Ctrl+Shift+P → "Python: Select Interpreter")
-3. Restart VS Code if needed
+### Error Handling
 
-### Rate Limiting
+The tool provides detailed error messages:
+- Connection test failures show credential issues
+- API errors display the full response for debugging
+- First article creation failure shows detailed payload for troubleshooting
 
-Zendesk API has rate limits. If you hit them:
-- The tool will show error messages
-- Wait a few minutes and try again
-- Consider copying in smaller batches
-
-## Development
-
-### Project Structure
+## Project Structure
 
 ```
 zdhelpcopy/
-├── .github/
-│   └── copilot-instructions.md
 ├── zdhelpcopy/
 │   ├── __init__.py
-│   ├── cli.py              # Interactive CLI interface
-│   ├── copier.py           # Core copy logic
-│   └── zendesk_client.py   # Zendesk API client
-├── .env.example
-├── .gitignore
-├── requirements.txt
-├── setup.py
-└── README.md
+│   ├── cli.py              # Main CLI interface with interactive prompts
+│   ├── zendesk_client.py   # Zendesk API wrapper (v2 Help Center API)
+│   ├── copier.py           # Core copy logic with ID mapping
+│   └── cleanup.py          # Utility to delete all Help Center content
+├── .env                     # Your credentials (gitignored)
+├── .env.example            # Template for credentials
+├── requirements.txt        # Python dependencies
+├── setup.py               # Package configuration
+└── README.md              # This file
 ```
 
-### Running Tests
+## Requirements
 
-(Tests to be added in future versions)
+- **Python:** 3.7 or higher
+- **Dependencies:**
+  - `click` (8.0+) - CLI framework
+  - `requests` (2.25+) - HTTP library
+  - `python-dotenv` (0.19+) - Environment variable management
+  - `rich` (10.0+) - Rich terminal output
 
-## Future Enhancements
+Install all dependencies with:
+```bash
+pip install -r requirements.txt
+```
 
-- [ ] Support for multi-locale content
-- [ ] Copy article attachments and images
-- [ ] Update existing content instead of only creating new
-- [ ] Selective copying (specific categories/sections)
-- [ ] Dry-run mode
-- [ ] Export to JSON/import from JSON
-- [ ] Copy article translations
-- [ ] Copy user segments and permissions
+## Examples
 
-## License
+### Example 1: First-Time Setup
 
-MIT License - feel free to use and modify as needed.
+```bash
+# Clone and setup
+git clone https://github.com/memaxwelll/zdhelpcopy.git
+cd zdhelpcopy
+python -m venv .venv
+.venv\Scripts\Activate.ps1  # Windows PowerShell
+pip install -r requirements.txt
 
-## Support
+# Configure
+cp .env.example .env
+# Edit .env with your credentials
 
-For issues or questions:
-1. Check the Troubleshooting section above
-2. Review Zendesk API documentation: https://developer.zendesk.com/api-reference/
-3. Open an issue in this repository
+# Run
+python -m zdhelpcopy.cli
+```
+
+### Example 2: One-Time Copy
+
+```bash
+python -m zdhelpcopy.cli \
+  --source-subdomain "production" \
+  --source-email "admin@company.com" \
+  --source-token "abc123..." \
+  --dest-subdomain "staging" \
+  --dest-email "admin@company.com" \
+  --dest-token "xyz789..." \
+  --yes
+```
+
+### Example 3: Clean and Copy
+
+```bash
+# Delete existing content
+python -m zdhelpcopy.cleanup --yes
+
+# Copy fresh content
+python -m zdhelpcopy.cli --yes
+```
+
+## Troubleshooting
+
+### Authentication Errors
+
+**Problem:** `Could not connect to Zendesk`
+
+**Solutions:**
+- Verify your subdomain is correct (don't include `.zendesk.com`)
+- Check your email address is correct
+- Ensure your API token is valid and not expired
+- Make sure you're using `/token` format (handled automatically by the tool)
+
+### Article Creation Failures
+
+**Problem:** Articles fail to copy with 400 errors
+
+**Solutions:**
+- Check that permission groups exist in destination
+- Verify user segments are configured
+- Ensure article content doesn't have destination-specific restrictions
+
+### Rate Limiting
+
+**Problem:** Too many requests error
+
+**Solutions:**
+- The tool automatically handles pagination
+- For very large Help Centers, consider running during off-peak hours
+- Zendesk rate limits vary by plan tier
+
+### Network Issues
+
+**Problem:** Connection timeouts or network errors
+
+**Solutions:**
+- Check your internet connection
+- Verify firewall isn't blocking Zendesk API
+- Try again later if Zendesk is experiencing issues
+
+## FAQ
+
+**Q: Can I copy between different Zendesk plan tiers?**  
+A: Yes, as long as both instances have Help Center enabled.
+
+**Q: Will this copy user data or tickets?**  
+A: No, only Help Center content (categories, sections, articles).
+
+**Q: Can I copy to multiple destinations?**  
+A: Run the tool multiple times with different destination credentials.
+
+**Q: What happens if I interrupt the copy process?**  
+A: Partially copied content will remain in the destination. Use the cleanup utility to start fresh.
+
+**Q: Does this copy images and attachments?**  
+A: Yes, article body HTML is copied as-is, including image URLs. However, images must be publicly accessible.
 
 ## Contributing
 
-Contributions welcome! Please feel free to submit a Pull Request.
+Contributions are welcome! Here's how you can help:
+
+1. **Fork** the repository
+2. **Create** a feature branch (`git checkout -b feature/amazing-feature`)
+3. **Commit** your changes (`git commit -m 'Add amazing feature'`)
+4. **Push** to the branch (`git push origin feature/amazing-feature`)
+5. **Open** a Pull Request
+
+Please ensure your code:
+- Follows Python best practices (PEP 8)
+- Includes docstrings for new functions
+- Works with Python 3.7+
+
+## License
+
+This project is licensed under the **Creative Commons Attribution-NonCommercial 4.0 International License (CC BY-NC 4.0)**.
+
+### You are free to:
+- ✅ **Share** — copy and redistribute the material in any medium or format
+- ✅ **Adapt** — remix, transform, and build upon the material
+
+### Under the following terms:
+- 📝 **Attribution** — You must give appropriate credit, provide a link to the license, and indicate if changes were made
+- 🚫 **NonCommercial** — You may NOT use the material for commercial purposes
+
+**Commercial use is strictly prohibited.** If you wish to use this tool commercially, please contact the author for licensing options.
+
+For the full license text, see the [LICENSE](LICENSE) file or visit:
+https://creativecommons.org/licenses/by-nc/4.0/
+
+## Haftungsausschluss / Disclaimer
+
+### 🇩🇪 Deutsch
+
+⚠️ **WICHTIGER HINWEIS**: Dieses Tool wird "wie besehen" zur Verfügung gestellt, **ohne jegliche Gewährleistung**.
+
+**Der Autor übernimmt keine Haftung für:**
+- Datenverlust oder -beschädigung
+- Unterbrechungen des Geschäftsbetriebs
+- Fehler oder Ausfälle bei der Datenübertragung
+- Schäden an Zendesk-Instanzen
+- Verlust von Produktivität oder Geschäftsmöglichkeiten
+
+**Sie sind selbst verantwortlich für:**
+- ✓ Erstellen von Backups Ihrer Daten vor der Nutzung
+- ✓ Testen der Funktionalität in einer Testumgebung
+- ✓ Sicherstellen, dass Sie über die erforderlichen Berechtigungen verfügen
+- ✓ Einhaltung der Zendesk-Nutzungsbedingungen
+
+**Die Verwendung dieses Tools erfolgt auf eigene Gefahr!**
+
+### 🇬🇧 English
+
+⚠️ **IMPORTANT NOTICE**: This tool is provided "as is", **without warranty of any kind**.
+
+**The author assumes no liability for:**
+- Data loss or corruption
+- Business interruptions
+- Errors or failures in data transmission
+- Damage to Zendesk instances
+- Loss of productivity or business opportunities
+
+**You are responsible for:**
+- ✓ Creating backups of your data before use
+- ✓ Testing functionality in a test environment
+- ✓ Ensuring you have the necessary permissions
+- ✓ Compliance with Zendesk terms of service
+
+**Use of this tool is at your own risk!**
+
+### Best Practices
+
+Before using this tool in production:
+
+1. **🧪 Test First**: Always test in a sandbox or staging environment
+2. **💾 Backup**: Create full backups of both source and destination Help Centers
+3. **🔐 Permissions**: Verify you have proper API access and permissions
+4. **📋 Review**: Check Zendesk API rate limits and terms of service
+5. **🔍 Validate**: Review copied content before publishing
+6. **📊 Monitor**: Watch for errors during the copy process
+
+## Support
+
+- 📖 [Zendesk API Documentation](https://developer.zendesk.com/api-reference/help_center/help-center-api/introduction/)
+- 🐛 [Report Issues](https://github.com/memaxwelll/zdhelpcopy/issues)
+- 💬 [Discussions](https://github.com/memaxwelll/zdhelpcopy/discussions)
+
+## Acknowledgments
+
+Built with:
+- [Click](https://click.palletsprojects.com/) - Command-line interface framework
+- [Rich](https://rich.readthedocs.io/) - Beautiful terminal formatting
+- [Requests](https://requests.readthedocs.io/) - HTTP library
+- [python-dotenv](https://github.com/theskumar/python-dotenv) - Environment variable management
+
+---
+
+<div align="center">
+
+Made with ❤️ for the Zendesk community
+
+⭐ Star this repo if you find it helpful!
+
+</div>
