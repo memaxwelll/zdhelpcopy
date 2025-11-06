@@ -255,6 +255,118 @@ class HelpCenterCopier:
         console.print(f"[green]✓ Created {copied_count} articles, skipped {skipped_count} existing[/green]")
         return copied_count
     
+    def copy_category_translations(self) -> int:
+        """
+        Copy all category translations from source to destination
+        
+        Returns:
+            Number of translations copied
+        """
+        console.print("\n[bold cyan]Copying category translations...[/bold cyan]")
+        
+        copied_count = 0
+        skipped_count = 0
+        
+        with Progress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            BarColumn(),
+            TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
+        ) as progress:
+            task = progress.add_task("[cyan]Processing category translations...", total=len(self.category_mapping))
+            
+            for source_cat_id, dest_cat_id in self.category_mapping.items():
+                try:
+                    # Get source translations
+                    source_translations = self.source.get_category_translations(source_cat_id)
+                    
+                    # Get existing destination translations
+                    dest_translations = self.dest.get_category_translations(dest_cat_id)
+                    existing_locales = {t['locale'] for t in dest_translations}
+                    
+                    # Copy missing translations
+                    for translation in source_translations:
+                        source_locale = translation['locale']
+                        dest_locale = self.locale_mapping.get(source_locale, source_locale)
+                        
+                        if dest_locale not in existing_locales:
+                            translation_data = {
+                                'locale': dest_locale,
+                                'title': translation['name'],
+                                'description': translation.get('description', '')
+                            }
+                            try:
+                                self.dest.create_category_translation(dest_cat_id, translation_data)
+                                copied_count += 1
+                            except Exception as e:
+                                console.print(f"[yellow]Warning: Could not copy category translation ({dest_locale}): {e}[/yellow]")
+                                skipped_count += 1
+                        else:
+                            skipped_count += 1
+                except Exception as e:
+                    console.print(f"[yellow]Warning: Could not process category {source_cat_id}: {e}[/yellow]")
+                
+                progress.advance(task)
+        
+        console.print(f"[green]✓ Copied {copied_count} category translations, skipped {skipped_count} existing[/green]")
+        return copied_count
+    
+    def copy_section_translations(self) -> int:
+        """
+        Copy all section translations from source to destination
+        
+        Returns:
+            Number of translations copied
+        """
+        console.print("\n[bold cyan]Copying section translations...[/bold cyan]")
+        
+        copied_count = 0
+        skipped_count = 0
+        
+        with Progress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            BarColumn(),
+            TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
+        ) as progress:
+            task = progress.add_task("[cyan]Processing section translations...", total=len(self.section_mapping))
+            
+            for source_sec_id, dest_sec_id in self.section_mapping.items():
+                try:
+                    # Get source translations
+                    source_translations = self.source.get_section_translations(source_sec_id)
+                    
+                    # Get existing destination translations
+                    dest_translations = self.dest.get_section_translations(dest_sec_id)
+                    existing_locales = {t['locale'] for t in dest_translations}
+                    
+                    # Copy missing translations
+                    for translation in source_translations:
+                        source_locale = translation['locale']
+                        dest_locale = self.locale_mapping.get(source_locale, source_locale)
+                        
+                        if dest_locale not in existing_locales:
+                            translation_data = {
+                                'locale': dest_locale,
+                                'title': translation['name'],
+                                'description': translation.get('description', '')
+                            }
+                            try:
+                                self.dest.create_section_translation(dest_sec_id, translation_data)
+                                copied_count += 1
+                            except Exception as e:
+                                console.print(f"[yellow]Warning: Could not copy section translation ({dest_locale}): {e}[/yellow]")
+                                skipped_count += 1
+                        else:
+                            skipped_count += 1
+                except Exception as e:
+                    console.print(f"[yellow]Warning: Could not process section {source_sec_id}: {e}[/yellow]")
+                
+                progress.advance(task)
+        
+        console.print(f"[green]✓ Copied {copied_count} section translations, skipped {skipped_count} existing[/green]")
+        return copied_count
+    
     def copy_article_translations(self) -> int:
         """
         Copy all article translations from source to destination
@@ -356,7 +468,9 @@ class HelpCenterCopier:
         console.print("[bold magenta]Starting Help Center copy process...[/bold magenta]")
         
         self.copy_categories()
+        self.copy_category_translations()
         self.copy_sections()
+        self.copy_section_translations()
         self.copy_articles()
         self.copy_article_translations()
         

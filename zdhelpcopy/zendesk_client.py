@@ -118,6 +118,50 @@ class ZendeskClient:
         response.raise_for_status()
         return response.json()['translation']
     
+    def get_category_translations(self, category_id: int) -> List[Dict]:
+        """Fetch all translations for a category"""
+        translations = []
+        url = f"{self.base_url}/help_center/categories/{category_id}/translations.json"
+        
+        while url:
+            response = self.session.get(url)
+            response.raise_for_status()
+            data = response.json()
+            translations.extend(data.get('translations', []))
+            url = data.get('next_page')
+        
+        return translations
+    
+    def create_category_translation(self, category_id: int, translation_data: Dict) -> Dict:
+        """Create a translation for a category"""
+        url = f"{self.base_url}/help_center/categories/{category_id}/translations.json"
+        payload = {"translation": translation_data}
+        response = self.session.post(url, json=payload)
+        response.raise_for_status()
+        return response.json()['translation']
+    
+    def get_section_translations(self, section_id: int) -> List[Dict]:
+        """Fetch all translations for a section"""
+        translations = []
+        url = f"{self.base_url}/help_center/sections/{section_id}/translations.json"
+        
+        while url:
+            response = self.session.get(url)
+            response.raise_for_status()
+            data = response.json()
+            translations.extend(data.get('translations', []))
+            url = data.get('next_page')
+        
+        return translations
+    
+    def create_section_translation(self, section_id: int, translation_data: Dict) -> Dict:
+        """Create a translation for a section"""
+        url = f"{self.base_url}/help_center/sections/{section_id}/translations.json"
+        payload = {"translation": translation_data}
+        response = self.session.post(url, json=payload)
+        response.raise_for_status()
+        return response.json()['translation']
+    
     def create_category(self, category_data: Dict) -> Dict:
         """Create a new category"""
         url = f"{self.base_url}/help_center/categories.json"
