@@ -117,6 +117,17 @@ class HelpCenterCopier:
         Returns:
             Number of articles copied
         """
+        # Get destination permission groups to find a valid one to use
+        console.print("\n[bold cyan]Fetching permission groups from destination...[/bold cyan]")
+        try:
+            dest_permission_groups = self.dest.get_permission_groups()
+            # Use the first available permission group, or None if none exist
+            default_permission_group_id = dest_permission_groups[0]['id'] if dest_permission_groups else 1
+            console.print(f"[green]Using permission group ID: {default_permission_group_id}[/green]")
+        except Exception as e:
+            console.print(f"[yellow]Could not fetch permission groups, using default (1): {e}[/yellow]")
+            default_permission_group_id = 1
+        
         console.print("\n[bold cyan]Fetching articles from source...[/bold cyan]")
         source_articles = self.source.get_articles()
         
@@ -141,22 +152,38 @@ class HelpCenterCopier:
                     progress.advance(task)
                     continue
                 
+                # ONLY the absolute minimum required fields
+                # Zendesk API rejects articles with extra fields during creation
+                body = article.get('body')
+                if not body or body.strip() == '':
+                    body = '<p>No content</p>'
+                
+                # Use destination's permission group since source IDs don't exist in destination
+                # Set user_segment_id to null to make it visible to all users
                 article_data = {
                     'title': article['title'],
-                    'body': article.get('body', ''),
+                    'body': body,
                     'locale': article.get('locale', 'en-us'),
-                    'section_id': dest_section_id,
-                    'position': article.get('position', 0),
-                    'draft': article.get('draft', False),
-                    'promoted': article.get('promoted', False)
+                    'permission_group_id': default_permission_group_id,
+                    'user_segment_id': None
                 }
                 
                 try:
-                    self.dest.create_article(article_data)
+                    new_article = self.dest.create_article({'section_id': dest_section_id, **article_data})
                     copied_count += 1
                     progress.advance(task)
                 except Exception as e:
-                    console.print(f"[red]Error copying article '{article['title']}': {e}[/red]")
+                    # Log detailed error for first failure only
+                    if copied_count == 0:
+                        console.print(f"\n[red]Article creation failed. Error details:[/red]")
+                        console.print(f"[yellow]Article: {article['title']}[/yellow]")
+                        console.print(f"[yellow]Source permission_group_id: {article.get('permission_group_id')}[/yellow]")
+                        console.print(f"[yellow]Payload sent: {article_data}[/yellow]")
+                        if hasattr(e, 'response') and hasattr(e.response, 'text'):
+                            console.print(f"[yellow]API Response: {e.response.text}[/yellow]")
+                        else:
+                            console.print(f"[yellow]Error: {str(e)}[/yellow]")
+                    progress.advance(task)
         
         console.print(f"[green]✓ Copied {copied_count} articles[/green]")
         return copied_count

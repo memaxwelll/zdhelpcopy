@@ -82,6 +82,20 @@ class ZendeskClient:
         
         return articles
     
+    def get_permission_groups(self) -> List[Dict]:
+        """Fetch all permission groups"""
+        permission_groups = []
+        url = f"{self.base_url}/guide/permission_groups.json"
+        
+        while url:
+            response = self.session.get(url)
+            response.raise_for_status()
+            data = response.json()
+            permission_groups.extend(data.get('permission_groups', []))
+            url = data.get('next_page')
+        
+        return permission_groups
+    
     def create_category(self, category_data: Dict) -> Dict:
         """Create a new category"""
         url = f"{self.base_url}/help_center/categories.json"
@@ -91,8 +105,11 @@ class ZendeskClient:
         return response.json()['category']
     
     def create_section(self, section_data: Dict) -> Dict:
-        """Create a new section"""
-        url = f"{self.base_url}/help_center/sections.json"
+        """Create a new section under a category"""
+        category_id = section_data.get('category_id')
+        if not category_id:
+            raise ValueError("category_id is required to create a section")
+        url = f"{self.base_url}/help_center/categories/{category_id}/sections.json"
         payload = {"section": section_data}
         response = self.session.post(url, json=payload)
         response.raise_for_status()
@@ -100,9 +117,30 @@ class ZendeskClient:
     
     def create_article(self, article_data: Dict) -> Dict:
         """Create a new article"""
-        section_id = article_data.get('section_id')
+        section_id = article_data.pop('section_id')  # Remove from payload, use in URL only
         url = f"{self.base_url}/help_center/sections/{section_id}/articles.json"
         payload = {"article": article_data}
         response = self.session.post(url, json=payload)
         response.raise_for_status()
         return response.json()['article']
+    
+    def delete_category(self, category_id: int) -> bool:
+        """Delete a category (also deletes all sections and articles within it)"""
+        url = f"{self.base_url}/help_center/categories/{category_id}.json"
+        response = self.session.delete(url)
+        response.raise_for_status()
+        return True
+    
+    def delete_all_categories(self) -> int:
+        """Delete all categories from Help Center"""
+        categories = self.get_categories()
+        deleted_count = 0
+        
+        for category in categories:
+            try:
+                self.delete_category(category['id'])
+                deleted_count += 1
+            except Exception as e:
+                print(f"Error deleting category '{category['name']}': {e}")
+        
+        return deleted_count
