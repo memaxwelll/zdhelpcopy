@@ -265,26 +265,47 @@ class HelpCenterCopier:
         console.print("\n[bold cyan]Fetching article translations from source...[/bold cyan]")
         
         translations_to_copy = []
+        existing_translations = {}
+        
+        # Get existing translations for all destination articles
+        console.print("[cyan]Checking for existing translations in destination...[/cyan]")
+        for source_article_id, dest_article_id in self.article_mapping.items():
+            try:
+                dest_translations = self.dest.get_article_translations(dest_article_id)
+                existing_translations[dest_article_id] = {t['locale'] for t in dest_translations}
+            except:
+                existing_translations[dest_article_id] = set()
+        
+        # Collect translations to copy
         for source_article_id, dest_article_id in self.article_mapping.items():
             try:
                 translations = self.source.get_article_translations(source_article_id)
                 # Skip the source locale (already created with the article)
                 for translation in translations:
-                    if translation.get('locale') != translation.get('source_locale'):
-                        translations_to_copy.append({
-                            'dest_article_id': dest_article_id,
-                            'translation': translation
-                        })
+                    source_locale = translation.get('locale')
+                    if source_locale != translation.get('source_locale'):
+                        # Apply locale mapping
+                        dest_locale = self.locale_mapping.get(source_locale, source_locale)
+                        
+                        # Skip if translation already exists
+                        if dest_locale not in existing_translations.get(dest_article_id, set()):
+                            translations_to_copy.append({
+                                'dest_article_id': dest_article_id,
+                                'translation': translation,
+                                'dest_locale': dest_locale
+                            })
             except Exception as e:
                 console.print(f"[yellow]Warning: Could not fetch translations for article {source_article_id}: {e}[/yellow]")
         
         if not translations_to_copy:
-            console.print("[yellow]No translations found to copy[/yellow]")
+            console.print("[yellow]No new translations to copy (all already exist)[/yellow]")
             return 0
         
-        console.print(f"[green]Found {len(translations_to_copy)} translations[/green]")
+        console.print(f"[green]Found {len(translations_to_copy)} new translations to copy[/green]")
         
         copied_count = 0
+        skipped_count = 0
+        failed_locales = {}
         
         with Progress(
             SpinnerColumn(),
@@ -297,10 +318,7 @@ class HelpCenterCopier:
             for item in translations_to_copy:
                 dest_article_id = item['dest_article_id']
                 translation = item['translation']
-                
-                # Map locale if locale mapping is provided
-                source_locale = translation.get('locale')
-                dest_locale = self.locale_mapping.get(source_locale, source_locale)
+                dest_locale = item['dest_locale']
                 
                 translation_data = {
                     'locale': dest_locale,
@@ -313,10 +331,24 @@ class HelpCenterCopier:
                     copied_count += 1
                     progress.advance(task)
                 except Exception as e:
-                    console.print(f"[yellow]Warning: Could not copy translation ({translation.get('locale')}): {e}[/yellow]")
+                    # Track failed locales
+                    error_str = str(e)
+                    if '400' in error_str:
+                        failed_locales[dest_locale] = failed_locales.get(dest_locale, 0) + 1
+                    skipped_count += 1
                     progress.advance(task)
         
         console.print(f"[green]✓ Copied {copied_count} translations[/green]")
+        
+        if failed_locales:
+            console.print(f"\n[yellow]⚠️  Translation warnings:[/yellow]")
+            for locale, count in failed_locales.items():
+                console.print(f"[yellow]  • {count} translations failed for locale '{locale}' - ensure this language is enabled in destination[/yellow]")
+            console.print(f"\n[cyan]To enable missing languages:[/cyan]")
+            console.print(f"[cyan]  1. Go to Admin → Guide → Guide admin[/cyan]")
+            console.print(f"[cyan]  2. Navigate to Languages/Settings[/cyan]")
+            console.print(f"[cyan]  3. Click 'Add language' and enable: {', '.join(failed_locales.keys())}[/cyan]")
+        
         return copied_count
     
     def copy_all(self):
