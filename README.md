@@ -23,6 +23,7 @@ An interactive Python CLI tool that copies Help Center content (categories, sect
 
 - ✅ **Complete Content Copy** - Categories, sections, articles, and translations
 - 🌍 **Multi-Language Support** - Automatically copies all article translations
+- 🔄 **Duplicate Detection** - Skips existing content, only creates new items
 - 🎯 **Smart ID Mapping** - Automatically maintains relationships between content
 - 📊 **Progress Tracking** - Real-time progress bars and status updates
 - 🔐 **Flexible Authentication** - Environment variables, CLI args, or interactive prompts
@@ -343,7 +344,10 @@ A: Yes! Before copying, enable all required languages in your destination Zendes
 A: Run the tool multiple times with different destination credentials.
 
 **Q: What happens if I interrupt the copy process?**  
-A: Partially copied content will remain in the destination. Use the cleanup utility to start fresh.
+A: Partially copied content will remain in the destination. You can safely re-run the tool - it will skip already existing items and only copy new content.
+
+**Q: Will it create duplicates if I run it multiple times?**  
+A: No! The tool checks for existing categories, sections, and articles by name. It will skip items that already exist and only create new ones.
 
 **Q: Does this copy images and attachments?**  
 A: Yes, article body HTML is copied as-is, including image URLs. However, images must be publicly accessible.

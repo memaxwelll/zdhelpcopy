@@ -40,17 +40,35 @@ class HelpCenterCopier:
         
         console.print(f"[green]Found {len(source_categories)} categories[/green]")
         
+        # Get existing categories in destination
+        console.print("[cyan]Checking for existing categories in destination...[/cyan]")
+        dest_categories = self.dest.get_categories()
+        dest_categories_by_name = {cat['name']: cat for cat in dest_categories}
+        
+        created_count = 0
+        skipped_count = 0
+        
         with Progress(
             SpinnerColumn(),
             TextColumn("[progress.description]{task.description}"),
             BarColumn(),
             TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
         ) as progress:
-            task = progress.add_task("[cyan]Copying categories...", total=len(source_categories))
+            task = progress.add_task("[cyan]Processing categories...", total=len(source_categories))
             
             for category in source_categories:
+                category_name = category['name']
+                
+                # Check if category already exists
+                if category_name in dest_categories_by_name:
+                    existing_category = dest_categories_by_name[category_name]
+                    self.category_mapping[category['id']] = existing_category['id']
+                    skipped_count += 1
+                    progress.advance(task)
+                    continue
+                
                 category_data = {
-                    'name': category['name'],
+                    'name': category_name,
                     'description': category.get('description', ''),
                     'locale': category.get('locale', 'en-us'),
                     'position': category.get('position', 0)
@@ -59,11 +77,12 @@ class HelpCenterCopier:
                 try:
                     new_category = self.dest.create_category(category_data)
                     self.category_mapping[category['id']] = new_category['id']
+                    created_count += 1
                     progress.advance(task)
                 except Exception as e:
-                    console.print(f"[red]Error copying category '{category['name']}': {e}[/red]")
+                    console.print(f"[red]Error copying category '{category_name}': {e}[/red]")
         
-        console.print(f"[green]✓ Copied {len(self.category_mapping)} categories[/green]")
+        console.print(f"[green]✓ Created {created_count} categories, skipped {skipped_count} existing[/green]")
         return self.category_mapping
     
     def copy_sections(self) -> Dict[int, int]:
@@ -78,13 +97,22 @@ class HelpCenterCopier:
         
         console.print(f"[green]Found {len(source_sections)} sections[/green]")
         
+        # Get existing sections in destination
+        console.print("[cyan]Checking for existing sections in destination...[/cyan]")
+        dest_sections = self.dest.get_sections()
+        # Group by category_id and name for lookup
+        dest_sections_by_key = {(sec['category_id'], sec['name']): sec for sec in dest_sections}
+        
+        created_count = 0
+        skipped_count = 0
+        
         with Progress(
             SpinnerColumn(),
             TextColumn("[progress.description]{task.description}"),
             BarColumn(),
             TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
         ) as progress:
-            task = progress.add_task("[cyan]Copying sections...", total=len(source_sections))
+            task = progress.add_task("[cyan]Processing sections...", total=len(source_sections))
             
             for section in source_sections:
                 source_category_id = section.get('category_id')
@@ -95,8 +123,19 @@ class HelpCenterCopier:
                     progress.advance(task)
                     continue
                 
+                section_name = section['name']
+                section_key = (dest_category_id, section_name)
+                
+                # Check if section already exists in this category
+                if section_key in dest_sections_by_key:
+                    existing_section = dest_sections_by_key[section_key]
+                    self.section_mapping[section['id']] = existing_section['id']
+                    skipped_count += 1
+                    progress.advance(task)
+                    continue
+                
                 section_data = {
-                    'name': section['name'],
+                    'name': section_name,
                     'description': section.get('description', ''),
                     'locale': section.get('locale', 'en-us'),
                     'category_id': dest_category_id,
@@ -106,11 +145,12 @@ class HelpCenterCopier:
                 try:
                     new_section = self.dest.create_section(section_data)
                     self.section_mapping[section['id']] = new_section['id']
+                    created_count += 1
                     progress.advance(task)
                 except Exception as e:
-                    console.print(f"[red]Error copying section '{section['name']}': {e}[/red]")
+                    console.print(f"[red]Error copying section '{section_name}': {e}[/red]")
         
-        console.print(f"[green]✓ Copied {len(self.section_mapping)} sections[/green]")
+        console.print(f"[green]✓ Created {created_count} sections, skipped {skipped_count} existing[/green]")
         return self.section_mapping
     
     def copy_articles(self) -> int:
@@ -136,7 +176,14 @@ class HelpCenterCopier:
         
         console.print(f"[green]Found {len(source_articles)} articles[/green]")
         
+        # Get existing articles in destination
+        console.print("[cyan]Checking for existing articles in destination...[/cyan]")
+        dest_articles = self.dest.get_articles()
+        # Group by section_id and title for lookup
+        dest_articles_by_key = {(art['section_id'], art['title']): art for art in dest_articles}
+        
         copied_count = 0
+        skipped_count = 0
         
         with Progress(
             SpinnerColumn(),
@@ -144,7 +191,7 @@ class HelpCenterCopier:
             BarColumn(),
             TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
         ) as progress:
-            task = progress.add_task("[cyan]Copying articles...", total=len(source_articles))
+            task = progress.add_task("[cyan]Processing articles...", total=len(source_articles))
             
             for article in source_articles:
                 source_section_id = article.get('section_id')
@@ -152,6 +199,17 @@ class HelpCenterCopier:
                 
                 if not dest_section_id:
                     console.print(f"[yellow]Warning: Skipping article '{article['title']}' - section not found[/yellow]")
+                    progress.advance(task)
+                    continue
+                
+                article_title = article['title']
+                article_key = (dest_section_id, article_title)
+                
+                # Check if article already exists in this section
+                if article_key in dest_articles_by_key:
+                    existing_article = dest_articles_by_key[article_key]
+                    self.article_mapping[article['id']] = existing_article['id']
+                    skipped_count += 1
                     progress.advance(task)
                     continue
                 
@@ -168,7 +226,7 @@ class HelpCenterCopier:
                 # Use destination's permission group since source IDs don't exist in destination
                 # Set user_segment_id to null to make it visible to all users
                 article_data = {
-                    'title': article['title'],
+                    'title': article_title,
                     'body': body,
                     'locale': dest_locale,
                     'permission_group_id': default_permission_group_id,
@@ -185,7 +243,7 @@ class HelpCenterCopier:
                     # Log detailed error for first failure only
                     if copied_count == 0:
                         console.print(f"\n[red]Article creation failed. Error details:[/red]")
-                        console.print(f"[yellow]Article: {article['title']}[/yellow]")
+                        console.print(f"[yellow]Article: {article_title}[/yellow]")
                         console.print(f"[yellow]Source permission_group_id: {article.get('permission_group_id')}[/yellow]")
                         console.print(f"[yellow]Payload sent: {article_data}[/yellow]")
                         if hasattr(e, 'response') and hasattr(e.response, 'text'):
@@ -194,7 +252,7 @@ class HelpCenterCopier:
                             console.print(f"[yellow]Error: {str(e)}[/yellow]")
                     progress.advance(task)
         
-        console.print(f"[green]✓ Copied {copied_count} articles[/green]")
+        console.print(f"[green]✓ Created {copied_count} articles, skipped {skipped_count} existing[/green]")
         return copied_count
     
     def copy_article_translations(self) -> int:
