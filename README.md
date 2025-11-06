@@ -1,7 +1,4 @@
 # Zendesk Help Center Copy Tool
-
-> 🔄 Interactive Python CLI tool to copy Help Center content (categories, sections, articles) between Zendesk instances. Perfect for migrations, staging environments, and content backups.
-
 <div align="center">
 
 [![Python 3.7+](https://img.shields.io/badge/python-3.7+-blue.svg)](https://www.python.org/downloads/)
