@@ -96,6 +96,28 @@ class ZendeskClient:
         
         return permission_groups
     
+    def get_article_translations(self, article_id: int) -> List[Dict]:
+        """Fetch all translations for an article"""
+        translations = []
+        url = f"{self.base_url}/help_center/articles/{article_id}/translations.json"
+        
+        while url:
+            response = self.session.get(url)
+            response.raise_for_status()
+            data = response.json()
+            translations.extend(data.get('translations', []))
+            url = data.get('next_page')
+        
+        return translations
+    
+    def create_article_translation(self, article_id: int, translation_data: Dict) -> Dict:
+        """Create a translation for an article"""
+        url = f"{self.base_url}/help_center/articles/{article_id}/translations.json"
+        payload = {"translation": translation_data}
+        response = self.session.post(url, json=payload)
+        response.raise_for_status()
+        return response.json()['translation']
+    
     def create_category(self, category_data: Dict) -> Dict:
         """Create a new category"""
         url = f"{self.base_url}/help_center/categories.json"

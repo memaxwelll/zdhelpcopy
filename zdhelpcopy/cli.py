@@ -92,9 +92,10 @@ def prompt_credentials(instance_name: str, existing_creds: dict = None) -> dict:
 @click.option('--dest-subdomain', help='Destination Zendesk subdomain')
 @click.option('--dest-email', help='Destination Zendesk email')
 @click.option('--dest-token', help='Destination Zendesk API token')
+@click.option('--locale-map', help='Locale mapping in format "source:dest,source:dest" (e.g., "en-us:en-gb,de:de-de")')
 @click.option('--yes', '-y', is_flag=True, help='Skip confirmation prompts')
 def main(source_subdomain, source_email, source_token, 
-         dest_subdomain, dest_email, dest_token, yes):
+         dest_subdomain, dest_email, dest_token, locale_map, yes):
     """
     Interactive CLI tool to copy Zendesk Help Center content from one instance to another.
     
@@ -102,6 +103,7 @@ def main(source_subdomain, source_email, source_token,
     - Categories
     - Sections
     - Articles
+    - Article translations (all languages)
     
     You can provide credentials via command-line options, environment variables (.env file),
     or interactively when prompted.
@@ -171,9 +173,21 @@ def main(source_subdomain, source_email, source_token,
             console.print("[red]Copy cancelled.[/red]")
             return
     
+    # Parse locale mapping if provided
+    locale_mapping = {}
+    if locale_map:
+        try:
+            for mapping in locale_map.split(','):
+                source_locale, dest_locale = mapping.split(':')
+                locale_mapping[source_locale.strip()] = dest_locale.strip()
+            console.print(f"\n[cyan]Locale mapping: {locale_mapping}[/cyan]")
+        except ValueError:
+            console.print("[bold red]Error: Invalid locale mapping format. Use 'source:dest,source:dest'[/bold red]")
+            return
+    
     # Perform the copy
     try:
-        copier = HelpCenterCopier(source_client, dest_client)
+        copier = HelpCenterCopier(source_client, dest_client, locale_mapping=locale_mapping)
         copier.copy_all()
     except KeyboardInterrupt:
         console.print("\n[red]Copy interrupted by user.[/red]")

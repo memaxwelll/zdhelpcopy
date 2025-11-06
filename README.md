@@ -21,7 +21,8 @@ An interactive Python CLI tool that copies Help Center content (categories, sect
 
 ## Features
 
-- ✅ **Complete Content Copy** - Categories, sections, and articles
+- ✅ **Complete Content Copy** - Categories, sections, articles, and translations
+- 🌍 **Multi-Language Support** - Automatically copies all article translations
 - 🎯 **Smart ID Mapping** - Automatically maintains relationships between content
 - 📊 **Progress Tracking** - Real-time progress bars and status updates
 - 🔐 **Flexible Authentication** - Environment variables, CLI args, or interactive prompts
@@ -112,6 +113,25 @@ python -m zdhelpcopy.cli \
   --dest-token "your-token"
 ```
 
+### Locale Mapping
+
+If your source and destination use different locale codes (e.g., "en-us" vs "en-gb"), use the `--locale-map` option:
+
+```bash
+python -m zdhelpcopy.cli \
+  --locale-map "en-us:en-gb,de:de-de,fr:fr-fr" \
+  --yes
+```
+
+**Format**: `source-locale:dest-locale,source-locale:dest-locale`
+
+**Example scenarios**:
+- Source has "en-us" → Destination uses "en-gb": `--locale-map "en-us:en-gb"`
+- Source has "de" → Destination uses "de-de": `--locale-map "de:de-de"`
+- Multiple mappings: `--locale-map "en-us:en-gb,de:de-de,fr:fr-fr"`
+
+Unmapped locales will be copied with their original locale codes.
+
 ### Cleanup Utility
 
 Delete all Help Center content from an instance:
@@ -153,6 +173,7 @@ The tool supports three authentication methods (in order of precedence):
 | **Categories** | Name, Description, Locale, Position |
 | **Sections** | Name, Description, Locale, Position, Category relationship |
 | **Articles** | Title, Body, Locale, Permission group, User segment |
+| **Translations** | All article translations (title, body) in all available languages |
 
 ### ID Mapping
 
@@ -161,6 +182,24 @@ The tool maintains relationships between content:
 1. **Categories** are copied first, creating a mapping of source IDs → destination IDs
 2. **Sections** use the category mapping to maintain correct parent relationships
 3. **Articles** use the section mapping to ensure they're placed in the correct sections
+4. **Translations** use the article mapping to copy all language versions of each article
+
+### Multi-Language Support
+
+**Important**: Before copying content with translations, you must **enable the required locales** in your destination Zendesk instance:
+
+1. Go to **Admin** (⚙️) → **Guide** → **Guide admin**
+2. Click **Customize design** → **Settings** (or **Manage** in the left sidebar)
+3. Go to **Languages** tab
+4. Click **Add language** and enable all languages that exist in your source Help Center
+5. Save your changes
+
+The tool will then automatically:
+- Copy articles in their default locale
+- Copy all available translations for each article
+- Skip translations for locales not enabled in the destination (with a warning)
+
+**Example**: If your source has articles in English (en-us), German (de), and French (fr), make sure all three languages are enabled in the destination Guide settings before running the copy.
 
 ### Permission Groups
 
@@ -295,7 +334,10 @@ python -m zdhelpcopy.cli --yes
 A: Yes, as long as both instances have Help Center enabled.
 
 **Q: Will this copy user data or tickets?**  
-A: No, only Help Center content (categories, sections, articles).
+A: No, only Help Center content (categories, sections, articles, and translations).
+
+**Q: Do I need to enable languages in the destination first?**  
+A: Yes! Before copying, enable all required languages in your destination Zendesk under **Admin → Guide → Guide admin → Languages**. The tool will skip translations for languages that aren't enabled.
 
 **Q: Can I copy to multiple destinations?**  
 A: Run the tool multiple times with different destination credentials.
@@ -305,6 +347,12 @@ A: Partially copied content will remain in the destination. Use the cleanup util
 
 **Q: Does this copy images and attachments?**  
 A: Yes, article body HTML is copied as-is, including image URLs. However, images must be publicly accessible.
+
+**Q: Which languages are supported?**  
+A: All languages supported by Zendesk. The tool copies whatever translations exist in the source, as long as those locales are enabled in the destination.
+
+**Q: What if my source uses "en-us" but my destination uses "en-gb"?**  
+A: Use the `--locale-map` option to map locale codes: `--locale-map "en-us:en-gb"`. This will convert all English (US) content to English (GB) in the destination.
 
 ## Contributing
 
@@ -384,10 +432,11 @@ Before using this tool in production:
 
 1. **🧪 Test First**: Always test in a sandbox or staging environment
 2. **💾 Backup**: Create full backups of both source and destination Help Centers
-3. **🔐 Permissions**: Verify you have proper API access and permissions
-4. **📋 Review**: Check Zendesk API rate limits and terms of service
-5. **🔍 Validate**: Review copied content before publishing
-6. **📊 Monitor**: Watch for errors during the copy process
+3. **🌍 Enable Languages**: Enable all required languages in destination Guide admin before copying
+4. **🔐 Permissions**: Verify you have proper API access and permissions
+5. **📋 Review**: Check Zendesk API rate limits and terms of service
+6. **🔍 Validate**: Review copied content before publishing
+7. **📊 Monitor**: Watch for errors during the copy process
 
 ## Support
 

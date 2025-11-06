@@ -12,18 +12,21 @@ console = Console()
 class HelpCenterCopier:
     """Handles the copying of Help Center content between Zendesk instances"""
     
-    def __init__(self, source_client: ZendeskClient, dest_client: ZendeskClient):
+    def __init__(self, source_client: ZendeskClient, dest_client: ZendeskClient, locale_mapping: Dict[str, str] = None):
         """
         Initialize the copier
         
         Args:
             source_client: Client for source Zendesk instance
             dest_client: Client for destination Zendesk instance
+            locale_mapping: Optional mapping of source locales to destination locales (e.g., {"en-us": "en-gb"})
         """
         self.source = source_client
         self.dest = dest_client
         self.category_mapping = {}
         self.section_mapping = {}
+        self.article_mapping = {}
+        self.locale_mapping = locale_mapping or {}
     
     def copy_categories(self) -> Dict[int, int]:
         """
@@ -158,18 +161,24 @@ class HelpCenterCopier:
                 if not body or body.strip() == '':
                     body = '<p>No content</p>'
                 
+                # Map locale if locale mapping is provided
+                source_locale = article.get('locale', 'en-us')
+                dest_locale = self.locale_mapping.get(source_locale, source_locale)
+                
                 # Use destination's permission group since source IDs don't exist in destination
                 # Set user_segment_id to null to make it visible to all users
                 article_data = {
                     'title': article['title'],
                     'body': body,
-                    'locale': article.get('locale', 'en-us'),
+                    'locale': dest_locale,
                     'permission_group_id': default_permission_group_id,
                     'user_segment_id': None
                 }
                 
                 try:
                     new_article = self.dest.create_article({'section_id': dest_section_id, **article_data})
+                    # Store article mapping for translations
+                    self.article_mapping[article['id']] = new_article['id']
                     copied_count += 1
                     progress.advance(task)
                 except Exception as e:
@@ -188,12 +197,77 @@ class HelpCenterCopier:
         console.print(f"[green]✓ Copied {copied_count} articles[/green]")
         return copied_count
     
+    def copy_article_translations(self) -> int:
+        """
+        Copy all article translations from source to destination
+        
+        Returns:
+            Number of translations copied
+        """
+        console.print("\n[bold cyan]Fetching article translations from source...[/bold cyan]")
+        
+        translations_to_copy = []
+        for source_article_id, dest_article_id in self.article_mapping.items():
+            try:
+                translations = self.source.get_article_translations(source_article_id)
+                # Skip the source locale (already created with the article)
+                for translation in translations:
+                    if translation.get('locale') != translation.get('source_locale'):
+                        translations_to_copy.append({
+                            'dest_article_id': dest_article_id,
+                            'translation': translation
+                        })
+            except Exception as e:
+                console.print(f"[yellow]Warning: Could not fetch translations for article {source_article_id}: {e}[/yellow]")
+        
+        if not translations_to_copy:
+            console.print("[yellow]No translations found to copy[/yellow]")
+            return 0
+        
+        console.print(f"[green]Found {len(translations_to_copy)} translations[/green]")
+        
+        copied_count = 0
+        
+        with Progress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            BarColumn(),
+            TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
+        ) as progress:
+            task = progress.add_task("[cyan]Copying translations...", total=len(translations_to_copy))
+            
+            for item in translations_to_copy:
+                dest_article_id = item['dest_article_id']
+                translation = item['translation']
+                
+                # Map locale if locale mapping is provided
+                source_locale = translation.get('locale')
+                dest_locale = self.locale_mapping.get(source_locale, source_locale)
+                
+                translation_data = {
+                    'locale': dest_locale,
+                    'title': translation.get('title'),
+                    'body': translation.get('body', '<p>No content</p>')
+                }
+                
+                try:
+                    self.dest.create_article_translation(dest_article_id, translation_data)
+                    copied_count += 1
+                    progress.advance(task)
+                except Exception as e:
+                    console.print(f"[yellow]Warning: Could not copy translation ({translation.get('locale')}): {e}[/yellow]")
+                    progress.advance(task)
+        
+        console.print(f"[green]✓ Copied {copied_count} translations[/green]")
+        return copied_count
+    
     def copy_all(self):
-        """Copy all Help Center content (categories, sections, articles)"""
+        """Copy all Help Center content (categories, sections, articles, translations)"""
         console.print("[bold magenta]Starting Help Center copy process...[/bold magenta]")
         
         self.copy_categories()
         self.copy_sections()
         self.copy_articles()
+        self.copy_article_translations()
         
         console.print("\n[bold green]✓ Copy process completed![/bold green]")
