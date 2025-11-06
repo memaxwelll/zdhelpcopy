@@ -29,6 +29,10 @@ ENV/
 # Environment variables
 .env
 
+# Test files (may contain credentials)
+test_*.py
+check_*.py
+
 # IDE
 .vscode/
 .idea/
